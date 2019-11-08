@@ -1,0 +1,124 @@
+---
+title: "fazorsa_OriginalHomeworkCode_04"
+author: "Frank Azorsa"
+date: "11/5/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r, echo=FALSE}
+knitr::opts_chunk$set(error = TRUE)
+```
+#Challenges
+1. I am still adjusting details to my code for both questions.
+2. Also, I am still working on the extra credit functions.
+
+###[1] Using the “KamilarAndCooperData.csv” dataset, run a linear regression looking at log(HomeRange_km2) in relation to log(Body_mass_female_mean) and report your β coeffiecients (slope and intercept).
+
+```{r}
+library(curl)
+library(car)
+library(ggplot2)
+f <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN597_Fall19/KamilarAndCooperData.csv")
+d <- read.csv(f, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+head(d)
+```
+```{r}
+mod <- lm(data = d, log(HomeRange_km2) ~ log(Body_mass_female_mean))
+summary(mod)
+```
+```{r}
+goodline <- function(x,a,b, width = 1, colour = "black", type = 1){
+  x1 <- min(x)
+  x2 <- max(x)
+  y1 <- a + b*x1
+  y2 <- a + b*x2
+  lines(c(x1,x2),c(y1,y2), lwd = width, col = colour, lty = type)
+}
+```
+```{r}
+#abline(a = -9.44, b = 1.04, lwd = 1.5, col ="grey35")#This does not work, I am not sure why.
+plot(log(d$Body_mass_female_mean), log(d$HomeRange_km2), xlab = "Log Body_mass_female_mean", ylab = "Log HomeRange_km2", cex.axis = 1.2, font.lab = 2, cex.lab = 1.2, col = "grey35", pch =10)
+goodline(log(x = d$Body_mass_female_mean), a = -9.44, b = 1.04, colour = "grey35", width = 1.5)
+```
+```{r}
+attributes(mod)
+```
+```{r}
+plot(mod)
+```
+```{r}
+qqPlot(mod$residuals)
+```
+```{r}
+mod$coefficients
+``` 
+```{r}
+confint(mod)
+```
+###[2] Then, use bootstrapping to sample from your data 1000 times with replacement, each time fitting the same model and calculating the same coefficients. This generates a sampling distribution for each β coefficient.
+Estimate the standard error for each of your β coefficients as the standard deviation of the sampling distribution from your bootstrap and determine the 95% CI for each of your β coefficients based on the appropriate quantiles from your sampling distribution.
+
+How does the former compare to the SE estimated from your entire dataset using the formula for standard error implemented in lm()?
+
+How does the latter compare to the 95% CI estimated from your entire dataset?
+
+```{r}
+library(boot)
+r_squared <- function(formula, data, indices) {
+  val <- data[indices,]
+  fit <- lm(formula, data=val)
+  return(summary(fit)$r.square)
+}
+output <- boot(data=d, statistic = r_squared,
+                R=1000, formula=log(HomeRange_km2)~log(Body_mass_female_mean))
+output
+plot(output)
+boot.ci(output, type = "bca")
+```
+```{r}
+bs <- function(formula, data, indices) {
+  d <- data[indices,]
+  fit <- lm(formula, data=d)
+  return(coef(fit))
+}
+results <- boot(data=d, statistic=bs,
+   R=1000, formula=logHomeRange_km2~logFemaleBodyMass)  
+plot(results)
+boot.ci(results)
+```
+```{r}
+coefficients(results)
+confint(results, level = 0.95)
+```
+
+#EXTRA CREDIT
+#I am still working on this function.
+Write a FUNCTION that takes as its arguments a dataframe, “d”, a linear model, “m” (as a character string, e.g., “logHR~logBM”), a user-defined confidence interval level, “conf.level” (with default = 0.95), and a number of bootstrap replicates, “n” (with default = 1000). Your function should return a dataframe that includes: beta coefficient names; beta coefficients, standard errors, and upper and lower CI limits for the linear model based on your entire dataset; and mean beta coefficient estimates, SEs, and CI limits for those coefficients based on your bootstrap.
+```{r}
+
+```
+#EXTRA EXTRA CREDIT
+Graph each beta value from the linear model and its corresponding mean value, lower CI and upper CI from a bootstrap as a function of number of bootstraps from 10 to 200 by 10s. HINT: the beta value from the linear model will be the same for all bootstraps and the mean beta value may not differ that much!
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
