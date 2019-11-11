@@ -68,21 +68,6 @@ output
 plot(output)
 boot.ci(output, type = "bca")
 ```
-```{r}
-bs <- function(formula, data, indices) {
-  d <- data[indices,]
-  fit <- lm(formula, data=d)
-  return(coef(fit))
-}
-results <- boot(data=d, statistic=bs,
-   R=1000, formula=logHomeRange_km2~logFemaleBodyMass)  
-plot(results)
-boot.ci(results)
-```
-```{r}
-coefficients(results)
-confint(results, level = 0.95)
-```
 
 #EXTRA CREDIT
 #I am still working on this function.
